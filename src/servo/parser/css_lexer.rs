@@ -216,8 +216,31 @@ fn parser(reader: io::reader, state : ParserState) -> CssLexer {
          mut parser_state: state };
 }
 
+fn lex_css_from_bytes(-content : [u8]/~, result_chan : chan<Token>) {
+    let reader = io::bytes_reader(content);
+    let lexer = parser(reader, CssElement);
+
+    loop {
+        let token = lexer.parse_css();
+        let should_break = token == Eof;
+        result_chan.send(token);
+        if should_break { break; }
+    }
+}
+
+fn spawn_css_lexer_from_string(-content : ~str) -> port<Token> {
+    let result_port = port();
+    let result_chan = chan(result_port);
+
+    task::spawn { ||
+        lex_css_from_bytes(str::bytes(*content), result_chan);
+    }
+
+    ret result_port;
+}
+
 #[warn(no_non_implicitly_copyable_typarams)]
-fn spawn_css_lexer_task(-filename: ~str) -> port<Token> {
+fn spawn_css_lexer_from_file(-filename: ~str) -> port<Token> {
     let result_port = port();
     let result_chan = chan(result_port);
 
@@ -226,22 +249,11 @@ fn spawn_css_lexer_task(-filename: ~str) -> port<Token> {
         let file_try = io::read_whole_file(*filename);
 
         // Check if the given css file existed, if it does, parse it,
-        // otherwise just send an eof.  This is a hack to allow
-        // guessing that if foo.html exists, foo.css is the
-        // corresponding stylesheet.
+        // otherwise just send an eof.
         if file_try.is_ok() {
             #debug["Lexing css sheet %s", *copy filename];
             let file_data = file_try.get();
-            let reader = io::bytes_reader(file_data);
-        
-            let lexer = parser(reader, CssElement);
-
-            loop {
-                let token = lexer.parse_css();
-                let should_break = token == Eof;
-                result_chan.send(token);
-                if should_break { break; }
-            }
+            lex_css_from_bytes(file_data, result_chan);
         } else {
             #debug["Failed to open css sheet %s", *copy filename];
             result_chan.send(Eof);

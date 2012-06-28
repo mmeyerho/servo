@@ -14,7 +14,6 @@ import dom::base::NodeScope;
 import dom::rcu::WriterMethods;
 import dom::style;
 import parser::html_lexer::spawn_html_lexer_task;
-import parser::css_builder::build_stylesheet;
 import parser::html_builder::build_dom;
 import layout::layout_task;
 import layout_task::{Layout, BuildMsg};
