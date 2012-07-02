@@ -232,9 +232,7 @@ fn spawn_css_lexer_from_string(-content : ~str) -> port<Token> {
     let result_port = port();
     let result_chan = chan(result_port);
 
-    task::spawn { ||
-        lex_css_from_bytes(str::bytes(*content), result_chan);
-    }
+    task::spawn(|| lex_css_from_bytes(str::bytes(*content), result_chan));
 
     ret result_port;
 }
