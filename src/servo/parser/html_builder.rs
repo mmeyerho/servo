@@ -10,13 +10,12 @@ import gfx::geometry::au;
 import parser = parser::html_lexer;
 import parser::Token;
 import dom::style::Stylesheet;
-
 import dvec::extensions;
 
-enum css_message {
-    file(~str),
-    tag(~str),
-    exit   
+enum CSSMessage {
+    File(~str),
+    Tag(~str),
+    Exit   
 }
 
 #[warn(no_non_implicitly_copyable_typarams)]
@@ -86,12 +85,12 @@ spawned, collates them, and sends them to the given result channel.
 * `from_parent` - A port on which to receive new links.
 
 "]
-fn css_link_listener(to_parent : chan<Stylesheet>, from_parent : port<css_message>) {
+fn css_link_listener(to_parent : chan<Stylesheet>, from_parent : port<CSSMessage>) {
     let mut result_vec = [];
 
     loop {
         alt from_parent.recv() {
-          file(filename) {
+          File(filename) {
             let result_port = comm::port();
             let result_chan = comm::chan(result_port);
             let filename = copy filename;
@@ -104,7 +103,7 @@ fn css_link_listener(to_parent : chan<Stylesheet>, from_parent : port<css_messag
             });
             vec::push(result_vec, result_port);
           }
-          tag(style) {
+          Tag(style) {
             let result_port = comm::port();
             let result_chan = comm::chan(result_port);
             let style = copy style;
@@ -117,7 +116,7 @@ fn css_link_listener(to_parent : chan<Stylesheet>, from_parent : port<css_messag
             });
             vec::push(result_vec, result_port);
           }
-          exit {
+          Exit {
             break;
           }
         }
@@ -178,7 +177,7 @@ fn build_dom(scope: NodeScope, stream: port<Token>) -> (Node, port<Stylesheet>) 
                         alt elmt.get_attr("href") {
                           some(filename) {
                             #debug["Linking to a css sheet named: %s", filename];
-                            style_chan.send(file(~copy filename));
+                            style_chan.send(File(~copy filename));
                           }
                           none { /* fall through*/ }
                         }
@@ -208,7 +207,7 @@ fn build_dom(scope: NodeScope, stream: port<Token>) -> (Node, port<Stylesheet>) 
         }
     }
 
-    style_chan.send(exit);
+    style_chan.send(Exit);
 
     ret (cur_node, style_port);
 }

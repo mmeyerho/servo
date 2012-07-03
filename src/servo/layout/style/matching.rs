@@ -5,7 +5,7 @@ import dom::base;
 import base::{ElementData, Node, Text};
 import dom::style::{Selector, StyleDeclaration, FontSize, Display, TextColor, BackgroundColor,
                     Stylesheet, Element, Child, Descendant, Sibling, Attr, Exact, Exists, Includes,
-                    StartsWith};
+                    StartsWith, Width, Height};
 import dom::rcu::ReaderMethods;
 import style::{computed_style, default_style_for_node_kind};
 
@@ -169,7 +169,7 @@ impl priv_style_methods for Node {
             alt decl {
               Display(dis)           { layout.computed_style.display = dis; }
               BackgroundColor(col)  { layout.computed_style.back_color = col; }
-              TextColor(*) | FontSize(*)   { /* not supported yet */ } 
+              TextColor(*) | FontSize(*) | Width(*) | Height(*)   { /* not supported yet */ } 
             }
         })
     }
