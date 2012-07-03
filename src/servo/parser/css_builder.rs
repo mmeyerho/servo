@@ -11,7 +11,9 @@ import parser::css_lexer::{Token, StartDescription, EndDescription,
                            Comma, Element, Attr, Description,
                            Eof};
 import comm::recv;
-import option::is_none;
+import option::{map, is_none};
+import vec::append;
+import parser::parser_util::parse_unit;
 import util::color::parsing::parse_color;
 
 type TokenReader = {stream : port<Token>, mut lookahead : option<Token>};
@@ -75,11 +77,12 @@ impl parser_methods for TokenReader {
 
             loop {
                 let tok = self.get();
+                let built_sel <- cur_sel;
+                
                 alt tok {
                   Descendant {
                     alt self.parse_element() {
                       some(elmt)   { 
-                        let built_sel <- cur_sel;
                         let new_sel = copy elmt;
                         cur_sel <- ~style::Descendant(built_sel, new_sel)
                       }
@@ -89,7 +92,6 @@ impl parser_methods for TokenReader {
                   Child {
                     alt self.parse_element() {
                       some(elmt)   { 
-                        let built_sel <- cur_sel;
                         let new_sel = copy elmt;
                         cur_sel <- ~style::Child(built_sel, new_sel)
                       }
@@ -99,7 +101,6 @@ impl parser_methods for TokenReader {
                   Sibling {
                     alt self.parse_element() {
                       some(elmt)  { 
-                        let built_sel <- cur_sel;
                         let new_sel = copy elmt;
                         cur_sel <- ~style::Sibling(built_sel, new_sel)
                       }
@@ -107,13 +108,11 @@ impl parser_methods for TokenReader {
                     }
                   }
                   StartDescription {
-                    let built_sel <- cur_sel; 
                     sel_list += [built_sel];
                     self.unget(StartDescription);
                     break;
                   }
                   Comma {
-                    let built_sel <- cur_sel;
                     sel_list += [built_sel];
                     self.unget(Comma);
                     break;
@@ -147,30 +146,19 @@ impl parser_methods for TokenReader {
               Description(prop, val) {
                 alt prop {
                   "font-size" {
-                    // TODO, support more ways to declare a font size than # pt
-                    assert val.ends_with("pt");
-                    let num = val.substr(0u, val.len() - 2u);
-                    
-                    alt uint::from_str(num) {
-                      some(n)    { desc_list += [FontSize(Pt(n))]; }
-                      none       { fail "Nonnumber provided as font size"; }
-                    }
+                    ret none;
+
                   }
                   "display" {
                     alt val {
                       "inline"   { desc_list += [Display(DisInline)]; }
                       "block"    { desc_list += [Display(DisBlock)]; }
                       "none"     { desc_list += [Display(DisNone)]; }
-                      _          { #debug["Recieved unknown display value '%s'",
-                                          val]; }
+                      _          { #debug["Recieved unknown display value '%s'", val]; }
                     }
                   }
-                  "color" {
-                    desc_list += [TextColor(parse_color(val))];
-                  }
-                  "background-color" {
-                    desc_list += [BackgroundColor(parse_color(val))];
-                  }
+                  "color" { desc_list += [TextColor(parse_color(val))]; }
+                  "background-color" { desc_list += [BackgroundColor(parse_color(val))]; }
                   _          { #debug["Recieved unknown style property '%s'",
                                       val]; }
                 }

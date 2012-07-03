@@ -13,9 +13,9 @@ enum Unit {
     Cm(float),
     Em(float),
     Ex(float),
-    Pt(uint),
-    Pc(uint),
-    Px(uint)
+    Pt(float),
+    Pc(float),
+    Px(float)
 }
 
 enum StyleDeclaration {
