@@ -143,7 +143,7 @@ impl parser_methods for TokenReader {
         loop {
             let tok = self.get();
             alt tok {
-              EndDescription   { break; }
+              EndDescription { break; }
               Description(prop, val) {
                 alt prop {
                   "font-size" {
@@ -176,8 +176,7 @@ impl parser_methods for TokenReader {
                 }
               }
               Eof        { ret none; }
-              StartDescription | Descendant | Child | Sibling
-              | Comma | Element(_) | Attr(_)  {
+              StartDescription | Descendant | Child | Sibling | Comma | Element(_) | Attr(_)  {
                 fail #fmt["Unexpected token %? in description", tok]; 
               }
             }

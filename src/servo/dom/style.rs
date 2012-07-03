@@ -12,7 +12,7 @@ enum Unit {
     Mm(float),
     Cm(float),
     Em(float),
-    Ex(float), //TODO: find out what ex is 
+    Ex(float),
     Pt(uint),
     Pc(uint),
     Px(uint)
