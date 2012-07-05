@@ -12,8 +12,8 @@ import parser::css_lexer::{Token, StartDescription, EndDescription,
                            Eof};
 import comm::recv;
 import option::{map, is_none};
-import vec::append;
-import parser::parser_util::parse_unit;
+import vec::push;
+import parser::parser_util::parse_font_size;
 import util::color::parsing::parse_color;
 
 type TokenReader = {stream : port<Token>, mut lookahead : option<Token>};
@@ -137,7 +137,7 @@ impl parser_methods for TokenReader {
     }
     
     fn parse_description() -> option<[StyleDeclaration]> {
-        let mut desc_list = [];
+        let mut desc_list : [StyleDeclaration]= ~[];
 
         loop {
             let tok = self.get();
@@ -146,21 +146,19 @@ impl parser_methods for TokenReader {
               Description(prop, val) {
                 alt prop {
                   "font-size" {
-                    ret none;
-
+                    parse_font_size(val).map(|res| push(desc_list, FontSize(res)));
                   }
                   "display" {
                     alt val {
-                      "inline"   { desc_list += [Display(DisInline)]; }
-                      "block"    { desc_list += [Display(DisBlock)]; }
-                      "none"     { desc_list += [Display(DisNone)]; }
+                      "inline"   { push(desc_list, Display(DisInline)); }
+                      "block"    { push(desc_list, Display(DisBlock)); }
+                      "none"     { push(desc_list, Display(DisNone)); }
                       _          { #debug["Recieved unknown display value '%s'", val]; }
                     }
                   }
-                  "color" { desc_list += [TextColor(parse_color(val))]; }
-                  "background-color" { desc_list += [BackgroundColor(parse_color(val))]; }
-                  _          { #debug["Recieved unknown style property '%s'",
-                                      val]; }
+                  "color" { push(desc_list, TextColor(parse_color(val))); }
+                  "background-color" { push(desc_list, BackgroundColor(parse_color(val))); }
+                  _          { #debug["Recieved unknown style property '%s'", val]; }
                 }
               }
               Eof        { ret none; }

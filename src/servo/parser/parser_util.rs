@@ -1,29 +1,38 @@
-import dom::style::{Unit, In, Cm, Mm, Percent, Em, Ex, Pt, Pc, Px};
+import dom::style::*;
 import str::{pop_char, from_chars};
 import float::from_str;
 import option::map;
 
-fn parse_unit(-str : str) -> option<Unit> {
-    let mut str = str;
-    if str.len() < 1 { ret none }
-    let last_char = pop_char(str);
-    if last_char == '%' {
-        ret from_str(str).map(|f| Percent(f));
-    }
-
-    if str.len() < 1 { ret none; }
-    let second_last = pop_char(str);
-
-    alt from_chars([second_last, last_char]/2) {
-      "in" { from_str(str).map(|f| In(f)) }
-      "cm" { from_str(str).map(|f| Cm(f)) }
-      "mm" { from_str(str).map(|f| Mm(f)) }
-      "pt" { from_str(str).map(|f| Pt(f)) }
-      "pc" { from_str(str).map(|f| Pc(f)) }
-      "px" { from_str(str).map(|f| Px(f)) }
-      "em" { from_str(str).map(|f| Em(f)) }
-      "ex" { from_str(str).map(|f| Ex(f)) }
+fn parse_unit(str : str) -> option<Unit> {
+    alt str {
+      s if s.ends_with("%")  { from_str(str.substr(0, str.len() - 1)).map(|f| Percent(f)) }
+      s if s.ends_with("in") { from_str(str.substr(0, str.len() - 2)).map(|f| In(f)) }
+      s if s.ends_with("cm") { from_str(str.substr(0, str.len() - 2)).map(|f| Cm(f)) }
+      s if s.ends_with("mm") { from_str(str.substr(0, str.len() - 2)).map(|f| Mm(f)) }
+      s if s.ends_with("pt") { from_str(str.substr(0, str.len() - 2)).map(|f| Pt(f)) }
+      s if s.ends_with("pc") { from_str(str.substr(0, str.len() - 2)).map(|f| Pc(f)) }
+      s if s.ends_with("px") { from_str(str.substr(0, str.len() - 2)).map(|f| Px(f)) }
+      s if s.ends_with("em") { from_str(str.substr(0, str.len() - 2)).map(|f| Em(f)) }
+      s if s.ends_with("ex") { from_str(str.substr(0, str.len() - 2)).map(|f| Ex(f)) }
       _    { none }
     }
 }
 
+fn parse_font_size(str : str) -> option<Unit> {
+    // The default pixel size, not sure if this is accurate.
+    let default = 16.0;
+
+    alt str {
+      "xx-small"  { some(Px(0.6*default)) }
+      "x-small"  { some(Px(0.75*default)) }
+      "small"  { some(Px(8.0/9.0*default)) }
+      "medium"  { some(Px(default)) }
+      "large"  { some(Px(1.2*default)) }
+      "x-large"  { some(Px(1.5*default)) }
+      "xx-large"  { some(Px(2.0*default)) }
+      "smaller"  { some(Em(0.8)) }
+      "larger"  { some(Em(1.25)) }
+      "inherit"  { some(Em(1.0)) }
+      _  { parse_unit(str) }
+    }
+}
