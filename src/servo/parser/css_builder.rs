@@ -149,11 +149,6 @@ impl parser_methods for TokenReader {
                     parse_font_size(val).map(|res| push(desc_list, FontSize(res)));
                   }
                   "display" {
-                    alt val {
-                      "inline"   { push(desc_list, Display(DisInline)); }
-                      "block"    { push(desc_list, Display(DisBlock)); }
-                      "none"     { push(desc_list, Display(DisNone)); }
-                      _          { #debug["Recieved unknown display value '%s'", val]; }
                     }
                   }
                   "color" { push(desc_list, TextColor(parse_color(val))); }

@@ -36,3 +36,21 @@ fn parse_font_size(str : str) -> option<Unit> {
       _  { parse_unit(str) }
     }
 }
+
+// For width / height, and anything else with the same attribute values
+fn parse_size(str : str) -> option<Unit> {
+    alt str {
+      "auto" { some(Auto) }
+      "inherit" { some(Em(1.0)) }
+      _ { parse_unit(str) }
+    }
+}
+
+fn parse_display_type(str : str) -> option<DisplayType> {
+    alt str {
+      "inline"   { some(Display(DisInline)) }
+      "block"    { some(Display(DisBlock)) }
+      "none"     { some(Display(DisNone)) }
+      _          { #debug["Recieved unknown display value '%s'", str]; none }
+    }
+}
