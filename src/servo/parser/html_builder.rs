@@ -14,7 +14,6 @@ import dvec::extensions;
 
 enum CSSMessage {
     File(~str),
-    Tag(~str),
     Exit   
 }
 
@@ -98,19 +97,6 @@ fn css_link_listener(to_parent : chan<Stylesheet>, from_parent : port<CSSMessage
                 //TODO: deal with extraneous copies
                 let filename <- copy filename;
                 let css_stream = css_lexer::spawn_css_lexer_from_file(filename);
-                let mut css_rules = css_builder::build_stylesheet(css_stream);
-                result_chan.send(css_rules);
-            });
-            vec::push(result_vec, result_port);
-          }
-          Tag(style) {
-            let result_port = comm::port();
-            let result_chan = comm::chan(result_port);
-            let style = copy style;
-            task::spawn(|| {
-                //TODO: deal with extraneous copies
-                let style = copy style;
-                let css_stream = css_lexer::spawn_css_lexer_from_string(style);
                 let mut css_rules = css_builder::build_stylesheet(css_stream);
                 result_chan.send(css_rules);
             });

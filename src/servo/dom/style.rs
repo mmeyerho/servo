@@ -7,6 +7,7 @@ enum DisplayType {
 }
 
 enum Unit {
+    Auto,
     Percent(float),
     In(float),
     Mm(float),

@@ -5,7 +5,7 @@
 
 import dom::style;
 import style::{DisInline, DisBlock, DisNone, Display, TextColor, BackgroundColor, FontSize,
-               Unit, Pt, Px, Pc, Em, Percent, Mm, Cm, In, StyleDeclaration, Selector};
+               Height, Width, StyleDeclaration, Selector};
 import parser::css_lexer::{Token, StartDescription, EndDescription,
                            Descendant, Child, Sibling,
                            Comma, Element, Attr, Description,
@@ -13,7 +13,7 @@ import parser::css_lexer::{Token, StartDescription, EndDescription,
 import comm::recv;
 import option::{map, is_none};
 import vec::push;
-import parser::parser_util::parse_font_size;
+import parser::parser_util::{parse_display_type, parse_font_size, parse_size};
 import util::color::parsing::parse_color;
 
 type TokenReader = {stream : port<Token>, mut lookahead : option<Token>};
@@ -145,15 +145,13 @@ impl parser_methods for TokenReader {
               EndDescription { break; }
               Description(prop, val) {
                 alt prop {
-                  "font-size" {
-                    parse_font_size(val).map(|res| push(desc_list, FontSize(res)));
-                  }
-                  "display" {
-                    }
-                  }
-                  "color" { push(desc_list, TextColor(parse_color(val))); }
                   "background-color" { push(desc_list, BackgroundColor(parse_color(val))); }
-                  _          { #debug["Recieved unknown style property '%s'", val]; }
+                  "color" { push(desc_list, TextColor(parse_color(val))); }
+                  "display" { parse_display_type(val).map(|res| push(desc_list, Display(res))); }
+                  "font-size" { parse_font_size(val).map(|res| push(desc_list, FontSize(res))); }
+                  "height" { parse_size(val).map(|res| push(desc_list, Height(res))); }
+                  "width" { parse_size(val).map(|res| push(desc_list, Width(res))); }
+                  _ { #debug["Recieved unknown style property '%s'", val]; }
                 }
               }
               Eof        { ret none; }
