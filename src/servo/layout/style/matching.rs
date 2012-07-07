@@ -7,7 +7,7 @@ import dom::style::{Selector, StyleDeclaration, FontSize, Display, TextColor, Ba
                     Stylesheet, Element, Child, Descendant, Sibling, Attr, Exact, Exists, Includes,
                     StartsWith, Width, Height};
 import dom::rcu::ReaderMethods;
-import style::{computed_style, default_style_for_node_kind};
+import style::{specified_style};
 
 export matching_methods;
 
@@ -167,9 +167,12 @@ impl priv_style_methods for Node {
     fn update_style(decl : StyleDeclaration) {
         self.aux(|layout| {
             alt decl {
-              Display(dis)           { layout.computed_style.display = dis; }
-              BackgroundColor(col)  { layout.computed_style.back_color = col; }
-              TextColor(*) | FontSize(*) | Width(*) | Height(*)   { /* not supported yet */ } 
+              BackgroundColor(col) { layout.specified_style.background_color = some(col); }
+              Display(dis) { layout.specified_style.display_type = some(dis); }
+              FontSize(size) { layout.specified_style.font_size = some(size); }
+              Height(size) { layout.specified_style.height = some(size); }
+              TextColor(col) { layout.specified_style.text_color = some(col); }
+              Width(size) { layout.specified_style.width = some(size); }
             }
         })
     }
@@ -195,7 +198,7 @@ impl matching_methods for Node {
             }
         }
         
-        self.aux(|a| #debug["Changed the style to: %?", copy *a.computed_style]);
+        self.aux(|a| #debug["Changed the style to: %?", copy *a.specified_style]);
     }
 }
 

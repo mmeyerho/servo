@@ -49,17 +49,17 @@ impl methods for ctxt {
             let kid_box = kid.construct_boxes();
 
             // Determine the child's display.
-            let disp = kid.get_computed_style().display;
-            if disp != DisInline {
+            let disp = kid.get_specified_style().display_type;
+            if disp != some(DisInline) {
                 self.finish_anonymous_box_if_necessary();
             }
 
             // Add the child's box to the current enclosing box or the current anonymous box.
-            alt kid.get_computed_style().display {
-                DisBlock { 
+            alt kid.get_specified_style().display_type {
+                some(DisBlock) { 
                   BTree.add_child(self.parent_box, kid_box);
                 }
-                DisInline {
+                some(DisInline) {
                     let anon_box = alt self.anon_box {
                         none {
                           //
@@ -78,9 +78,11 @@ impl methods for ctxt {
                     };
                     BTree.add_child(anon_box, kid_box);
                 }
-                DisNone {
+                some(DisNone) {
                     // Nothing to do.
                 }
+              _  { //hack for now
+              }
             }
         }
     }
@@ -96,23 +98,25 @@ impl methods for ctxt {
             let kid_box = kid.construct_boxes();
 
             // Determine the child's display.
-            let disp = kid.get_computed_style().display;
-            if disp != DisInline {
+            let disp = kid.get_specified_style().display_type;
+            if disp != some(DisInline) {
                 // TODO
             }
 
             // Add the child's box to the current enclosing box.
-            alt kid.get_computed_style().display {
-              DisBlock {
+            alt kid.get_specified_style().display_type {
+              some(DisBlock) {
                 // TODO
                 #warn("TODO: non-inline display found inside inline box");
                 BTree.add_child(self.parent_box, kid_box);
               }
-              DisInline {
+              some(DisInline) {
                 BTree.add_child(self.parent_box, kid_box);
               }
-              DisNone {
+              some(DisNone) {
                 // Nothing to do.
+              }
+              _  { //hack for now
               }
             }
         }
@@ -123,10 +127,12 @@ impl methods for ctxt {
         #debug("parent node:");
         self.parent_node.dump();
 
-        alt self.parent_node.get_computed_style().display {
-            DisBlock  { self.construct_boxes_for_block_children();  }
-            DisInline { self.construct_boxes_for_inline_children(); }
-            DisNone   { /* Nothing to do. */                        }
+        alt self.parent_node.get_specified_style().display_type {
+          some(DisBlock)  { self.construct_boxes_for_block_children();  }
+          some(DisInline) { self.construct_boxes_for_inline_children(); }
+          some(DisNone)   { /* Nothing to do. */                        }
+          _  { //hack for now
+          }
         }
 
         self.finish_anonymous_box_if_necessary();

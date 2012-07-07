@@ -51,7 +51,7 @@ class Box {
 }
 
 enum LayoutData = {
-    mut computed_style: ~computed_style,
+    mut specified_style: ~specified_style,
     mut box: option<@Box>
 };
 

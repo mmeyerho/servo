@@ -20,9 +20,9 @@ impl ApplyStyleBoxMethods for @Box {
         self.node.read(|node| {
             alt node.kind {
               ~Element(element) {
-                let style = self.node.get_computed_style();
+                let style = self.node.get_specified_style();
 
-                self.appearance.background_color = some(style.back_color);
+                self.appearance.background_color = style.background_color;
 
                 alt element.kind {
                   ~HTMLImageElement(*) {

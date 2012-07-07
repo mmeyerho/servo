@@ -2,7 +2,7 @@
 
 import arc::{arc, get, clone};
 
-import dom::style::{DisplayType, DisBlock, DisInline, DisNone, Stylesheet};
+import dom::style::{DisplayType, DisBlock, DisInline, DisNone, Stylesheet, Unit};
 import dom::base::{Element, HTMLDivElement, HTMLHeadElement, HTMLImageElement, Node, NodeKind};
 import dom::base::{Text};
 import dom::rcu::ReaderMethods;
@@ -11,14 +11,17 @@ import matching::matching_methods;
 import util::color::{Color, rgb};
 import util::color::css_colors::{white, black};
 
-type computed_style = {mut display : DisplayType, mut back_color : Color};
+type specified_style = {mut background_color : option<Color>,
+                        mut display_type : option<DisplayType>,
+                        mut font_size : option<Unit>,
+                        mut height : option<Unit>,
+                        mut text_color : option<Color>,
+                        mut width : option<Unit>};
 
-#[doc="Returns the default style for the given node kind."]
-fn default_style_for_node_kind(kind: NodeKind) -> computed_style {
+/*#[doc="Returns the default style for the given node kind."]
+fn default_style_for_node_kind(kind: NodeKind) -> specified_style {
     alt kind {
-      Text(*) {
-        {mut display: DisInline, mut back_color: white()}
-      }
+      Text(*) { {mut display: DisInline, mut back_color: white()} }
       Element(element) {
         let r = rand::rng();
         let rand_color = rgb(r.next() as u8, r.next() as u8, r.next() as u8);
@@ -31,6 +34,27 @@ fn default_style_for_node_kind(kind: NodeKind) -> computed_style {
         }
       }
     }
+}*/
+
+fn empty_style_for_node_kind(kind: NodeKind) -> specified_style {
+    let display_type = alt kind {
+      Text(*) { DisInline }
+      Element(element) {
+        alt *element.kind {
+          HTMLDivElement      { DisBlock }
+          HTMLHeadElement     { DisNone }
+          HTMLImageElement(*) { DisInline }
+          UnknownElement      { DisInline }
+        }
+      }
+    };
+
+    {mut background_color : none,
+     mut display_type : some(display_type),
+     mut font_size : none,
+     mut height : none,
+     mut text_color : none,
+     mut width : none}
 }
 
 impl style_priv for Node {
@@ -39,10 +63,12 @@ impl style_priv for Node {
         This is, importantly, the function that creates the layout data for the node (the reader-
         auxiliary box in the RCU model) and populates it with the default style.
      "]
+    // TODO: we should look into folding this into building the dom,
+    // instead of doing a linear sweep afterwards.
     fn initialize_style() {
         let node_kind = self.read(|n| copy *n.kind);
         let the_layout_data = @LayoutData({
-            mut computed_style : ~default_style_for_node_kind(node_kind),
+            mut specified_style : ~empty_style_for_node_kind(node_kind),
             mut box : none
         });
 
@@ -66,11 +92,11 @@ impl style_methods for Node {
 
         TODO: Return a safe reference; don't copy.
     "]
-    fn get_computed_style() -> computed_style {
+    fn get_specified_style() -> specified_style {
         if !self.has_aux() {
-            fail "get_computed_style() called on a node without a style!";
+            fail "get_specified_style() called on a node without a style!";
         }
-        ret copy *self.aux(|x| copy x).computed_style;
+        ret copy *self.aux(|x| copy x).specified_style;
     }
 
     #[doc="
