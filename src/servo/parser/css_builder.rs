@@ -47,16 +47,15 @@ impl parser_methods for TokenReader {
         loop {
             let tok = self.get();
             alt tok {
-              Attr(attr)       { attr_list += [copy attr]; }
+              Attr(attr) { attr_list += [copy attr]; }
               StartDescription | Descendant | Child | Sibling | Comma {
                 self.unget(tok); 
                 break;
               }
-              Eof              { ret none; }          
-              Element(_)          { fail "Unexpected second element without "
-                                       + "relation to first element"; }
-              EndDescription         { fail "Unexpected '}'"; }
-              Description(_, _)       { fail "Unexpected description"; }
+              Eof { ret none; }          
+              Element(_) { fail "Unexpected second element without relation to first element"; }
+              EndDescription { fail "Unexpected '}'"; }
+              Description(_, _) { fail "Unexpected description"; }
             }
         }
         
@@ -82,11 +81,11 @@ impl parser_methods for TokenReader {
                 alt tok {
                   Descendant {
                     alt self.parse_element() {
-                      some(elmt)   { 
+                      some(elmt) { 
                         let new_sel = copy elmt;
                         cur_sel <- ~style::Descendant(built_sel, new_sel)
                       }
-                      none         { ret none; }
+                      none { ret none; }
                     }
                   }
                   Child {
