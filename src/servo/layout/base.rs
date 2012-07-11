@@ -26,7 +26,7 @@ enum BoxKind {
 
 class Appearance {
     let mut background_image: option<@image>;
-    let mut background_color: option<Color>;
+    let mut background_color: Color;
 
     new() {
         self.background_image = none;
